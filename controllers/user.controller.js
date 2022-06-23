@@ -1,6 +1,7 @@
 const db = require("../models");
 const { user } = db;
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 // get users
 exports.getUsers = async (req, res) => {
@@ -118,9 +119,19 @@ exports.loginUser = async (req, res) => {
         status: 401,
       });
     }
+    const payload = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      roleId: user.roleId,
+    };
+    const token = jwt.sign(payload, "TOCA-ACADEMY-SECRET", {
+      expiresIn: "1h",
+    });
     return res.status(200).send({
       message: "User logged in successfully",
       error: false,
+      token: token,
       status: 200,
     });
   } catch (err) {
