@@ -1,6 +1,8 @@
 const db = require("../models");
 const { user } = db;
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const sendMail = require("../utils/email");
 
 // get users
 exports.getUsers = async (req, res) => {
@@ -18,6 +20,7 @@ exports.createUser = async (req, res) => {
   try {
     const { email, name, roleId } = req.body;
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
+    const passwordWithHash = req.body.password;
     req.body.password = hashedPassword;
     const user = await db.user.create({
       email: email,
@@ -25,6 +28,12 @@ exports.createUser = async (req, res) => {
       name: name,
       roleId: roleId,
     });
+    // send email with password
+    sendMail(
+      email,
+      "Toca Academy - Password",
+      `Your password is: ${passwordWithHash}`
+    );
     res.json(user);
   } catch (err) {
     res.status(500).json({
@@ -118,9 +127,19 @@ exports.loginUser = async (req, res) => {
         status: 401,
       });
     }
+    const payload = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      roleId: user.roleId,
+    };
+    const token = jwt.sign(payload, "TOCA-ACADEMY-SECRET", {
+      expiresIn: "1h",
+    });
     return res.status(200).send({
       message: "User logged in successfully",
       error: false,
+      token: token,
       status: 200,
     });
   } catch (err) {
