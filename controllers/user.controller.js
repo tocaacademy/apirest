@@ -3,6 +3,7 @@ const { user } = db;
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const sendMail = require("../utils/email");
+const axios = require("axios");
 
 // get users
 exports.getUsers = async (req, res) => {
@@ -45,6 +46,16 @@ exports.createUser = async (req, res) => {
 exports.getUser = async (req, res) => {
   try {
     const user = await db.user.findByPk(req.params.id);
+    const response = await axios.get(
+      `https://rickandmortyapi.com/api/character/2`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${req.headers.authorization}`,
+        },
+      }
+    );
+
     if (!user) {
       return res.status(404).json({
         message: "User not found",
@@ -53,7 +64,14 @@ exports.getUser = async (req, res) => {
       });
     }
 
-    res.json(user);
+    res.status(200).send({
+      message: "User found",
+      error: false,
+      user: {
+        user: user,
+        rickandmorty: response.data,
+      },
+    });
   } catch (err) {
     res.status(500).json({
       message: err.message,
