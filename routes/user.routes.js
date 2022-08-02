@@ -4,7 +4,7 @@ const { auth, isAdmin } = require("../middleware/auth");
 const validation = require("../middleware/validate");
 const userRouter = express.Router();
 
-userRouter.get("/", auth, isAdmin, userController.getUsers);
+userRouter.get("/", userController.getUsers);
 userRouter.post("/", validation, userController.createUser);
 userRouter.get("/:id", auth, userController.getUser);
 userRouter.put("/:id", auth, userController.updateUser);
